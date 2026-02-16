@@ -565,9 +565,14 @@
                             <label for="accessFile">Select Access Database File (.accdb/.mdb)</label>
                             <input type="file" id="accessFile" accept=".accdb,.mdb">
                         </div>
-                        <button class="btn" onclick="uploadAndConnectAccess()">
-                            📁 Upload & Connect
-                        </button>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <button class="btn" onclick="uploadAndConnectAccess()">
+                                📁 Upload & Connect
+                            </button>
+                            <button class="btn btn-danger" onclick="purgeUploads()" id="purgeUploadsBtn">
+                                🧹 Purge Uploads
+                            </button>
+                        </div>
                     </div>
 
                     <!-- MySQL Database -->

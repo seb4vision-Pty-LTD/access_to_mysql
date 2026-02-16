@@ -3,10 +3,11 @@ Access to MySQL Converter - Flask Backend
 Production-ready API server for converting Access databases to MySQL
 """
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
+import sys
 import json
 import logging
 from datetime import datetime
@@ -23,11 +24,19 @@ from job_manager import ExportJobManager
 app = Flask(__name__)
 CORS(app)
 
+# Detect if running as PyInstaller bundle
+is_bundled = getattr(sys, 'frozen', False)
+if is_bundled:
+    base_path = sys._MEIPASS  # PyInstaller temp directory
+else:
+    base_path = os.path.dirname(os.path.dirname(__file__))  # Project root
+
 # Configuration
 app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 100MB max file size
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'data', 'uploads')
-app.config['CONFIG_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'configs')
-app.config['LOG_FOLDER'] = os.path.join(os.path.dirname(__file__), '..', 'logs')
+app.config['UPLOAD_FOLDER'] = os.path.join(base_path, 'data', 'uploads')
+app.config['CONFIG_FOLDER'] = os.path.join(base_path, 'configs')
+app.config['LOG_FOLDER'] = os.path.join(base_path, 'logs')
+app.config['FRONTEND_FOLDER'] = os.path.join(base_path, 'frontend')
 app.config['ALLOWED_EXTENSIONS'] = {'accdb', 'mdb'}
 
 # Create necessary directories
@@ -45,6 +54,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Log startup info
+logger.info(f"Starting Access to MySQL Converter")
+logger.info(f"Running as bundle: {is_bundled}")
+logger.info(f"Base path: {base_path}")
+logger.info(f"Frontend folder: {app.config['FRONTEND_FOLDER']}")
+if not os.path.exists(app.config['FRONTEND_FOLDER']):
+    logger.warning(f"Frontend folder not found: {app.config['FRONTEND_FOLDER']}")
+
+
 # Session storage for database connections
 active_sessions = {}
 
@@ -58,6 +76,47 @@ job_manager = ExportJobManager(db_handler, data_exporter, active_sessions)
 def allowed_file(filename):
     """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+
+@app.route('/', methods=['GET'])
+def index():
+    """Serve the frontend index.html"""
+    try:
+        index_path = os.path.join(app.config['FRONTEND_FOLDER'], 'index.html')
+        with open(index_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        logger.error(f"Error serving index.html: {e}")
+        return jsonify({'error': 'Frontend not found'}), 404
+
+
+@app.route('/app.js', methods=['GET'])
+def serve_app_js():
+    """Serve the frontend app.js"""
+    try:
+        js_path = os.path.join(app.config['FRONTEND_FOLDER'], 'app.js')
+        with open(js_path, 'r', encoding='utf-8') as f:
+            return f.read(), 200, {'Content-Type': 'application/javascript'}
+    except Exception as e:
+        logger.error(f"Error serving app.js: {e}")
+        return jsonify({'error': 'JavaScript not found'}), 404
+
+
+@app.route('/styles.css', methods=['GET'])
+def serve_styles():
+    """Serve the frontend styles.css"""
+    try:
+        css_path = os.path.join(app.config['FRONTEND_FOLDER'], 'styles.css')
+        if os.path.exists(css_path):
+            with open(css_path, 'r', encoding='utf-8') as f:
+                return f.read(), 200, {'Content-Type': 'text/css'}
+        else:
+            # styles are inline in index.html, return empty
+            return '', 200, {'Content-Type': 'text/css'}
+    except Exception as e:
+        logger.error(f"Error serving styles.css: {e}")
+        return '', 404
+
 
 
 @app.route('/api/health', methods=['GET'])
@@ -351,6 +410,37 @@ def export_cancel():
         return jsonify({'success': True, 'message': 'Cancel requested'})
     except Exception as e:
         logger.error(f"Error requesting cancel: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/purge-uploads', methods=['POST'])
+def purge_uploads():
+    """Purge all uploaded files from the uploads folder"""
+    try:
+        upload_folder = app.config['UPLOAD_FOLDER']
+        removed = []
+        errors = []
+
+        for fname in os.listdir(upload_folder):
+            path = os.path.join(upload_folder, fname)
+            if os.path.isfile(path):
+                try:
+                    os.remove(path)
+                    removed.append(fname)
+                except Exception as ex:
+                    errors.append({'file': fname, 'error': str(ex)})
+
+        logger.info(f"Purged {len(removed)} uploaded files")
+
+        return jsonify({
+            'success': True,
+            'removed_count': len(removed),
+            'removed': removed,
+            'errors': errors
+        })
+
+    except Exception as e:
+        logger.exception('Error purging uploads')
         return jsonify({'error': str(e)}), 500
 
 

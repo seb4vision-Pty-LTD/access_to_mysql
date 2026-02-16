@@ -1,0 +1,17 @@
+include README_DISTRIBUTION.md
+include LICENSE
+include backend/requirements.txt
+include frontend/index.html
+include frontend/app.js
+include Dockerfile
+include docker-compose.yml
+include nginx.conf
+include run.bat
+include run.sh
+recursive-include backend *.py
+recursive-include frontend *.html *.js *.css
+recursive-include configs *.json
+global-exclude __pycache__
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .DS_Store

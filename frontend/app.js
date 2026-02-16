@@ -121,6 +121,43 @@ async function uploadAndConnectAccess() {
     }
 }
 
+
+/**
+ * Purge all uploaded files on the server
+ */
+async function purgeUploads() {
+    if (!confirm('Purge all uploaded files? This cannot be undone.')) return;
+
+    try {
+        showStatus('connectionStatus', 'Purging uploaded files...', 'info');
+
+        const response = await fetch(`${API_BASE_URL}/purge-uploads`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || 'Purge failed');
+        }
+
+        const data = await response.json();
+
+        showStatus('connectionStatus', `✅ Purged ${data.removed_count} files`, 'success');
+
+        // If the current session had an uploaded file reference, clear it
+        if (state.uploadedFilename) {
+            state.uploadedFilename = null;
+            state.accessFilepath = null;
+            document.getElementById('loadTablesBtn').disabled = true;
+            document.getElementById('accessStatus').className = 'connection-status disconnected';
+        }
+
+    } catch (error) {
+        console.error('Purge uploads error:', error);
+        showStatus('connectionStatus', `Purge failed: ${error.message}`, 'error');
+    }
+}
+
 async function loadAccessTables() {
     if (!state.accessConnected) {
         showStatus('connectionStatus', 'Please connect to Access database first', 'error');
