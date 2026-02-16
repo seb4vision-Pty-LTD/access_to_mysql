@@ -1,0 +1,61 @@
+{
+  "config_name": "save_all_config",
+  "access_file": {
+    "filename": "20260216_150337_CricDat.mdb",
+    "filepath": "C:\\Users\\SiphoMancam\\Documents\\Programming\\Access to mysql\\access-to-mysql-converter\\backend\\..\\data\\uploads\\20260216_150337_CricDat.mdb"
+  },
+  "tables": [
+    "AddOvers",
+    "BBBAvail",
+    "BallByBall",
+    "BowlType",
+    "Career Adjust",
+    "CenturySession",
+    "CloseOfPlay",
+    "Comp",
+    "CompTypes",
+    "CompWin",
+    "Countries",
+    "Dismissals",
+    "FOW",
+    "FieldingOvers",
+    "Fifties",
+    "FullSubs",
+    "Hat-Tricks",
+    "HourNoScore",
+    "Indiv",
+    "IndivBatVsBowl",
+    "Match",
+    "Match2",
+    "Notes",
+    "PlayerTeamYrs",
+    "Players",
+    "Points",
+    "ResultTypes",
+    "Results",
+    "RetiredHurt",
+    "RunOuts",
+    "RunsOffOver",
+    "Scores",
+    "Series",
+    "SubFielders",
+    "TeamAbbs",
+    "Teams",
+    "UmpReviews",
+    "Venues"
+  ],
+  "mysql": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "database": ""
+  },
+  "options": {
+    "override_data": true,
+    "create_tables": true,
+    "batch_size": 1000
+  },
+  "created_at": "2026-02-16T15:04:27.496758",
+  "updated_at": "2026-02-16T15:04:27.498364",
+  "config_id": "ff54dcba1538"
+}
