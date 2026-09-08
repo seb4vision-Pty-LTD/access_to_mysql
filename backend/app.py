@@ -32,7 +32,7 @@ else:
     base_path = os.path.dirname(os.path.dirname(__file__))  # Project root
 
 # Configuration
-app.config['MAX_CONTENT_LENGTH'] = 1000 * 1024 * 1024  # 100MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 100000 * 1024 * 1024  # 100MB max file size
 app.config['UPLOAD_FOLDER'] = os.path.join(base_path, 'data', 'uploads')
 app.config['CONFIG_FOLDER'] = os.path.join(base_path, 'configs')
 app.config['LOG_FOLDER'] = os.path.join(base_path, 'logs')
